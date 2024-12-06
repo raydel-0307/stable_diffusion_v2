@@ -1,34 +1,34 @@
 import json
-import requests
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+import requests
 
-def download_model(input_model_name, output_model_name, dir_path=None, timeout=30):
+def upload_model(model_name,model_path,timeout=30):
     load_dotenv()
 
     minio_url = os.getenv('MINIO_URL')
     if not minio_url:
         raise ValueError("La variable de entorno MINIO_URL no está definida")
 
-    print("Descargando Modelo")
-
-    url = f'http://{minio_url}/api/minio/download_from_models/'
+    if not model_path:
+        print("No se ingresó ninguna ruta de archivo.")
+        exit()
+    with open(model_path, 'rb') as file:
+        file_data = file.read()
+    url = f'http://{minio_url}/api/minio/upload_to_models/'  
     try:
-        response = requests.post(url,data={'model_name': input_model_name},timeout=timeout)
+        files = {'file': (model_path, file_data, 'application/octet-stream')}
+        response = requests.post(url,files=files,data={'object_name': f"{model_name}/models/model.pkl"},timeout=timeout)
         if response.status_code == 200:
-            file_name = output_model_name
-            if dir_path:file_name = f"{dir_path}/{output_model_name}"
-            with open(file_name, 'wb') as file:
-                file.write(response.content)
-
-            os.unlink(f"{dir_path}/model.pkl")
-
-            print(f"File downloaded and saved successfully as '{file_name}'")
+            print("Archivo subido exitosamente")
+            print(response.json())
+            os.unlink(model_path)
         else:
             print(f"Error: {response.status_code}")
             print(response.json())
+
     except Exception as e:
-        print(f"Request failed: {str(e)}")
+        print(f"Fallo en la solicitud: {str(e)}")
     except Exception as e:
         print(f"Error: {str(e)}")
 
@@ -43,10 +43,12 @@ def fuctions_execute(config_json_path: str):
         config = json.load(file)
         
     # Usar los valores del archivo JSON
-    model_name = f'{config["model_name"].split("/")[1]}/models/model.pkl'
+    model_name = config["model_name"].split("/")[1]
+    model_path = f'{ruta}/model.pkl'
 
     # Llamar al modelo y mostrar los resultados
-    download_model(model_name, "model.pkl", dir_path=ruta, timeout=30000)
+    print("Subiendo modelo")
+    upload_model(model_name,model_path,timeout=300000)
 
 
 def main():

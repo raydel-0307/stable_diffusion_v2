@@ -3,7 +3,6 @@ import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 import pickle
 from random import randint
-from minio_db import *
 from metrics import get_time
 import time
 import requests
@@ -34,11 +33,6 @@ def TrainModel(dir_path,model_name):
 
 	with open(model_path, 'wb') as f:
 		pickle.dump(pipe, f)
-
-	print("Subiendo modelo")
-	upload_model(model_name,model_path,timeout=3000)
-
-	os.unlink(model_path)
 
 	print("Modelo Gurdado")
 
