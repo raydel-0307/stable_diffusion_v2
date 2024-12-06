@@ -2,6 +2,7 @@ import json
 import requests
 from dotenv import load_dotenv
 import os
+import shutil
 
 def download_model(input_model_name, output_model_name, dir_path=None, timeout=30):
     load_dotenv()
@@ -21,7 +22,11 @@ def download_model(input_model_name, output_model_name, dir_path=None, timeout=3
             with open(file_name, 'wb') as file:
                 file.write(response.content)
 
-            os.unlink(f"{dir_path}/model.pkl")
+            if not os.path.exists(f"{dir_path}/model"):os.mkdir(f"{dir_path}/model")
+
+            shutil.unpack_archive(f"{dir_path}/model/model.zip", dir_path)
+
+            os.unlink(f"{dir_path}/model.zip")
 
             print(f"File downloaded and saved successfully as '{file_name}'")
         else:
@@ -43,10 +48,10 @@ def fuctions_execute(config_json_path: str):
         config = json.load(file)
         
     # Usar los valores del archivo JSON
-    model_name = f'{config["model_name"].split("/")[1]}/models/model.pkl'
+    model_name = f'{config["name_model"]}/models/model.zip'
 
     # Llamar al modelo y mostrar los resultados
-    download_model(model_name, "model.pkl", dir_path=ruta, timeout=30000)
+    download_model(model_name, "model.zip", dir_path=ruta, timeout=30000)
 
 
 def main():
